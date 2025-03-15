@@ -1,18 +1,25 @@
 CC=clang -std=c23
-SRC_C=$(wildcard src/*.c)
-SRC_H:=$(patsubst src/%c,inlude/%.h,$(SRC_C))
-OBJ:=$(patsubst src/%.c,obj/%.o,$(SRC_C))
-FLAGS=-Wall -Wextra -Werror -pedantic -c -g
+SRCS_C:=$(shell find src/ -iname "*.c")
+SRCS_H:=$(shell find include/ -iname "*.h")
+OBJS:=$(patsubst src/%.c,obj/%.o,$(SRCS_C))
+EXEC:=clox
+CFLAGS=-Wall -Wextra -pedantic -c -g
 
-.PHONY:all
-all: dir $(BUILD)/$(EXEC)
+.PHONY: all
+all: dir build/$(EXEC)
 
 dir:
-	mkdir -p $(BUILD)
+	mkdir -p build
+	mkdir -p obj
 
-$(BUILD)/$(EXEC): $(OBJ)
+build/$(EXEC): $(OBJS)
 	$(CC) $^ -o $@
 
-$(OBJ): $(SRC_C) $(SRC_H)
-	$(CC) $(FLAGS) $@ -o $< $(FLAGS) 
+$(OBJS): obj/%.o : src/%.c $(SRCS_H)
+	$(CC) $(CFLAGS) $< -o $@
+
+.PHONY: clean
+clean:
+	rm -rf build
+	rm -rf obj 
 	
