@@ -10,9 +10,9 @@ int main(void /*int argsc, char **argsv*/) {
 
   int constant = addConstant(&chunk, 2.1);
 
-  writeChunk(&chunk, OP_CONSTANT);
-  writeChunk(&chunk, constant);
-  writeChunk(&chunk, OP_RETURN);
+  writeChunk(&chunk, OP_CONSTANT, 123);
+  writeChunk(&chunk, constant, 123);
+  writeChunk(&chunk, OP_RETURN, 123);
 
   disassembleChunk(&chunk, "test chunk");
 
