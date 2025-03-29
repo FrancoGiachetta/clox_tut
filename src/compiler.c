@@ -1,22 +1,23 @@
 #include "../include/compiler.h"
-#include "../include/scanner.h"
-#include <stdio.h>
 
-void compile(const char *source) {
-  initScanner(source);
-  int line = -1;
+Parser parser;
+
+static void advance() {
+  parser.previous = parser.current;
 
   for (;;) {
-    Token token = scanToken();
-    if (token.line != line) {
-      printf("%4d ", token.line);
-      line = token.line;
-    } else {
-      printf("  | ");
-    }
-    printf("%2d '%.*s\n'", token.type, token.length, token.start);
+    parser.current = scanToken();
 
-    if (token.type == TOKEN_EOF)
+    if (parser.current.type != TOKEN_ERROR)
       break;
+
+    errorAtCurrent(parser.current.start);
   }
+}
+
+bool compile(const char *source, Chunk *chunk) {
+  initScanner(source);
+  advance();
+  expression();
+  consume(TOKEN_EOF, "Expect end of expression.");
 }

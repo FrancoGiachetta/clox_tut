@@ -1,9 +1,10 @@
 #ifndef clox_scanner_h
 #define clox_scanner_h
 
-#include "common.h"
-#include "stdio.h"
-#include "string.h"
+#include <stdio.h>
+#include <string.h>
+
+#include "../include/common.h"
 
 typedef struct {
   const char *start;
@@ -66,8 +67,7 @@ typedef struct {
   int line;
 } Token;
 
-Scanner scanner;
-
 void initScanner(const char *source);
 Token scanToken();
+
 #endif
