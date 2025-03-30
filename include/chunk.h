@@ -14,6 +14,7 @@ typedef enum {
   OP_RETURN,
 } OpCode;
 
+// a sequence of bytecode
 typedef struct {
   // number of elements actually in use
   int count;

@@ -6,6 +6,8 @@
 #include <stdio.h>
 
 typedef struct {
+  bool hadError;
+  bool panicMode;
   Token previous;
   Token current;
 } Parser;
