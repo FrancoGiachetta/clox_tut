@@ -1,6 +1,3 @@
-#include "../include/chunk.h"
-#include "../include/common.h"
-#include "../include/debug.h"
 #include "../include/vm.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -66,6 +63,8 @@ static void runFile(const char *path) {
 }
 
 int main(int argc, char **argv) {
+  initVM();
+
   if (argc == 1) {
     repl();
   } else if (argc == 2) {

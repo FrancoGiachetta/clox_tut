@@ -3,9 +3,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifdef DEBUG_PRINT_CODE
+#include "../include/debug.h"
+#endif
+
 Parser parser;
 Chunk *compilingChunk;
 
+static void expression();
+//< Global Variables forward-declarations
+static ParseRule *getRule(TokenType type);
+
+static void parsePrecedence(Precedence precedence);
 static Chunk *currentChunk() { return compilingChunk; }
 
 static void errorAt(Token *token, const char *message) {
@@ -80,11 +89,16 @@ static void emitConstant(Value value) {
   emiteBytes(OP_CONSTANT, makeConstant(value));
 }
 
-static void endCompiler() { emitReturn(); }
+static void endCompiler() {
+  emitReturn();
 
-static void expression() {
-  //
+#ifdef DEBUG_PRINT_CODE
+  if (!parser.hadError)
+    disassembleChunk(currentChunk(), "code");
+#endif
 }
+
+void expression() { parsePrecedence(PREC_ASSIGN); }
 
 static void grouping() {
   expression();
@@ -95,6 +109,107 @@ static void number() {
   double value = strtod(parser.previous.start, NULL);
   emitConstant(value);
 }
+
+static void binary() {
+  TokenType operatorType = parser.previous.type;
+  ParseRule *rule = getRule(operatorType);
+  parsePrecedence((Precedence)rule->precedence + 1);
+
+  switch (operatorType) {
+  case TOKEN_PLUS:
+    emiteByte(OP_ADD);
+    break;
+  case TOKEN_MINUS:
+    emiteByte(OP_SUB);
+    break;
+  case TOKEN_STAR:
+    emiteByte(OP_MUL);
+    break;
+  case TOKEN_SLASH:
+    emiteByte(OP_DIV);
+    break;
+  default:
+    return;
+  }
+}
+
+static void unary() {
+  TokenType operatorType = parser.previous.type;
+
+  parsePrecedence(PREC_UNARY);
+
+  switch (operatorType) {
+  case TOKEN_MINUS:
+    emiteByte(OP_NEGATE);
+    break;
+  default:
+    return;
+  }
+}
+
+ParseRule rules[] = {
+    [TOKEN_LEFT_PAREN] = {grouping, NULL, PREC_NONE},
+    [TOKEN_RIGHT_PAREN] = {NULL, NULL, PREC_NONE},
+    [TOKEN_LEFT_BRACE] = {NULL, NULL, PREC_NONE},
+    [TOKEN_RIGHT_BRACE] = {NULL, NULL, PREC_NONE},
+    [TOKEN_COMMA] = {NULL, NULL, PREC_NONE},
+    [TOKEN_DOT] = {NULL, NULL, PREC_NONE},
+    [TOKEN_MINUS] = {unary, binary, PREC_TERM},
+    [TOKEN_PLUS] = {NULL, binary, PREC_TERM},
+    [TOKEN_STAR] = {NULL, binary, PREC_FACTOR},
+    [TOKEN_SLASH] = {NULL, binary, PREC_FACTOR},
+    [TOKEN_SEMICOLON] = {NULL, NULL, PREC_NONE},
+    [TOKEN_BANG] = {NULL, NULL, PREC_NONE},
+    [TOKEN_BANG_EQUAL] = {NULL, NULL, PREC_NONE},
+    [TOKEN_EQUAL] = {NULL, NULL, PREC_NONE},
+    [TOKEN_EQUAL_EQUAL] = {NULL, NULL, PREC_NONE},
+    [TOKEN_GREATER] = {NULL, NULL, PREC_NONE},
+    [TOKEN_GREATER_EQUAL] = {NULL, NULL, PREC_NONE},
+    [TOKEN_LESS] = {NULL, NULL, PREC_NONE},
+    [TOKEN_LESS_EQUAL] = {NULL, NULL, PREC_NONE},
+    [TOKEN_IDENTIFIER] = {NULL, NULL, PREC_NONE},
+    [TOKEN_STRING] = {NULL, NULL, PREC_NONE},
+    [TOKEN_NUMBER] = {number, NULL, PREC_NONE},
+    [TOKEN_AND] = {NULL, NULL, PREC_NONE},
+    [TOKEN_OR] = {NULL, NULL, PREC_NONE},
+    [TOKEN_TRUE] = {NULL, NULL, PREC_NONE},
+    [TOKEN_FALSE] = {NULL, NULL, PREC_NONE},
+    [TOKEN_IF] = {NULL, NULL, PREC_NONE},
+    [TOKEN_ELSE] = {NULL, NULL, PREC_NONE},
+    [TOKEN_WHILE] = {NULL, NULL, PREC_NONE},
+    [TOKEN_FOR] = {NULL, NULL, PREC_NONE},
+    [TOKEN_FUN] = {NULL, NULL, PREC_NONE},
+    [TOKEN_RETURN] = {NULL, NULL, PREC_NONE},
+    [TOKEN_CLASS] = {NULL, NULL, PREC_NONE},
+    [TOKEN_THIS] = {NULL, NULL, PREC_NONE},
+    [TOKEN_SUPER] = {NULL, NULL, PREC_NONE},
+    [TOKEN_NIL] = {NULL, NULL, PREC_NONE},
+    [TOKEN_VAR] = {NULL, NULL, PREC_NONE},
+    [TOKEN_ERROR] = {NULL, NULL, PREC_NONE},
+    [TOKEN_EOF] = {NULL, NULL, PREC_NONE},
+    [TOKEN_PRINT] = {NULL, NULL, PREC_NONE},
+};
+
+void parsePrecedence(Precedence precedence) {
+  advance();
+
+  ParseFn prefixRule = getRule(parser.previous.type)->prefix;
+
+  if (prefixRule == NULL) {
+    error("Expected expression.");
+    return;
+  }
+
+  prefixRule();
+
+  while (precedence <= getRule(parser.current.type)->precedence) {
+    advance();
+    ParseFn infixRule = getRule(parser.previous.type)->infix;
+    infixRule();
+  }
+}
+
+ParseRule *getRule(TokenType type) { return &rules[type]; }
 
 bool compile(const char *source, Chunk *chunk) {
   initScanner(source);

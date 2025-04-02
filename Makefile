@@ -5,8 +5,8 @@ OBJS:=$(patsubst src/%.c,obj/%.o,$(SRCS_C))
 EXEC:=clox
 CFLAGS=-Wall -Wextra -pedantic -c -g
 
-.PHONY: all
-all: dir build/$(EXEC)
+.PHONY: build
+build: dir build/$(EXEC)
 
 dir:
 	mkdir -p build
