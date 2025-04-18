@@ -149,6 +149,24 @@ static void binary()
 
     switch (operatorType)
     {
+    case TOKEN_BANG_EQUAL:
+        emiteBytes(OP_EQ, OP_NOT);
+        break;
+    case TOKEN_EQUAL_EQUAL:
+        emiteByte(OP_EQ);
+        break;
+    case TOKEN_GREATER:
+        emiteByte(OP_GREATER);
+        break;
+    case TOKEN_GREATER_EQUAL:
+        emiteBytes(OP_LESS, OP_EQ);
+        break;
+    case TOKEN_LESS:
+        emiteByte(OP_LESS);
+        break;
+    case TOKEN_LESS_EQUAL:
+        emiteBytes(OP_GREATER, OP_NOT);
+        break;
     case TOKEN_PLUS:
         emiteByte(OP_ADD);
         break;
@@ -166,6 +184,24 @@ static void binary()
     }
 }
 
+static void literal()
+{
+    switch (parser.previous.type)
+    {
+    case TOKEN_NIL:
+        emiteByte(OP_NIL);
+        break;
+    case TOKEN_TRUE:
+        emiteByte(OP_TRUE);
+        break;
+    case TOKEN_FALSE:
+        emiteByte(OP_FALSE);
+        break;
+    default:
+        return;
+    }
+}
+
 static void unary()
 {
     TokenType operatorType = parser.previous.type;
@@ -174,6 +210,9 @@ static void unary()
 
     switch (operatorType)
     {
+    case TOKEN_BANG:
+        emiteByte(OP_NOT);
+        break;
     case TOKEN_MINUS:
         emiteByte(OP_NEGATE);
         break;
@@ -194,21 +233,21 @@ ParseRule rules[] = {
     [TOKEN_STAR] = {NULL, binary, PREC_FACTOR},
     [TOKEN_SLASH] = {NULL, binary, PREC_FACTOR},
     [TOKEN_SEMICOLON] = {NULL, NULL, PREC_NONE},
-    [TOKEN_BANG] = {NULL, NULL, PREC_NONE},
-    [TOKEN_BANG_EQUAL] = {NULL, NULL, PREC_NONE},
     [TOKEN_EQUAL] = {NULL, NULL, PREC_NONE},
-    [TOKEN_EQUAL_EQUAL] = {NULL, NULL, PREC_NONE},
-    [TOKEN_GREATER] = {NULL, NULL, PREC_NONE},
-    [TOKEN_GREATER_EQUAL] = {NULL, NULL, PREC_NONE},
-    [TOKEN_LESS] = {NULL, NULL, PREC_NONE},
-    [TOKEN_LESS_EQUAL] = {NULL, NULL, PREC_NONE},
+    [TOKEN_BANG] = {unary, NULL, PREC_NONE},
+    [TOKEN_BANG_EQUAL] = {NULL, binary, PREC_EQ},
+    [TOKEN_EQUAL_EQUAL] = {NULL, binary, PREC_EQ},
+    [TOKEN_GREATER] = {NULL, binary, PREC_COMP},
+    [TOKEN_GREATER_EQUAL] = {NULL, binary, PREC_COMP},
+    [TOKEN_LESS] = {NULL, binary, PREC_COMP},
+    [TOKEN_LESS_EQUAL] = {NULL, binary, PREC_COMP},
     [TOKEN_IDENTIFIER] = {NULL, NULL, PREC_NONE},
     [TOKEN_STRING] = {NULL, NULL, PREC_NONE},
     [TOKEN_NUMBER] = {number, NULL, PREC_NONE},
     [TOKEN_AND] = {NULL, NULL, PREC_NONE},
     [TOKEN_OR] = {NULL, NULL, PREC_NONE},
-    [TOKEN_TRUE] = {NULL, NULL, PREC_NONE},
-    [TOKEN_FALSE] = {NULL, NULL, PREC_NONE},
+    [TOKEN_TRUE] = {literal, NULL, PREC_NONE},
+    [TOKEN_FALSE] = {literal, NULL, PREC_NONE},
     [TOKEN_IF] = {NULL, NULL, PREC_NONE},
     [TOKEN_ELSE] = {NULL, NULL, PREC_NONE},
     [TOKEN_WHILE] = {NULL, NULL, PREC_NONE},
@@ -218,7 +257,7 @@ ParseRule rules[] = {
     [TOKEN_CLASS] = {NULL, NULL, PREC_NONE},
     [TOKEN_THIS] = {NULL, NULL, PREC_NONE},
     [TOKEN_SUPER] = {NULL, NULL, PREC_NONE},
-    [TOKEN_NIL] = {NULL, NULL, PREC_NONE},
+    [TOKEN_NIL] = {literal, NULL, PREC_NONE},
     [TOKEN_VAR] = {NULL, NULL, PREC_NONE},
     [TOKEN_ERROR] = {NULL, NULL, PREC_NONE},
     [TOKEN_EOF] = {NULL, NULL, PREC_NONE},
