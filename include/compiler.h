@@ -7,31 +7,34 @@
 
 typedef void (*ParseFn)();
 
-typedef struct {
-  bool hadError;
-  bool panicMode;
-  Token previous;
-  Token current;
+typedef struct
+{
+    bool hadError;
+    bool panicMode;
+    Token previous;
+    Token current;
 } Parser;
 
-typedef enum {
-  PREC_NONE,
-  PREC_ASSIGN, // =
-  PREC_OR,     // or
-  PREC_AND,    // and
-  PREC_EQ,     // == !=
-  PREC_COMP,   // < > <= >=
-  PREC_TERM,   // + -
-  PREC_FACTOR, // * /
-  PREC_UNARY,  // ! -
-  PREC_CALL,   // . ()
-  PREC_PRIMARY,
+typedef enum
+{
+    PREC_NONE,
+    PREC_ASSIGN, // =
+    PREC_OR,     // or
+    PREC_AND,    // and
+    PREC_EQ,     // == !=
+    PREC_COMP,   // < > <= >=
+    PREC_TERM,   // + -
+    PREC_FACTOR, // * /
+    PREC_UNARY,  // ! -
+    PREC_CALL,   // . ()
+    PREC_PRIMARY,
 } Precedence;
 
-typedef struct {
-  ParseFn prefix;
-  ParseFn infix;
-  Precedence precedence;
+typedef struct
+{
+    ParseFn prefix;
+    ParseFn infix;
+    Precedence precedence;
 } ParseRule;
 
 bool compile(const char *source, Chunk *chunk);

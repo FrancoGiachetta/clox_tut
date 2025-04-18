@@ -3,36 +3,50 @@
 
 #include "common.h"
 
-typedef enum {
-  VAL_BOOL,
-  VAL_NIL,
-  VAL_NUMBER,
+typedef enum
+{
+    VAL_BOOL,
+    VAL_NIL,
+    VAL_NUMBER,
 } ValueType;
 
-typedef struct {
-  ValueType type;
-  union {
-    bool boolean;
-    double number;
-  } as;
+typedef struct
+{
+    ValueType type;
+    union {
+        bool boolean;
+        double number;
+    } as;
 } Value;
 
-typedef struct {
-  int count;
-  int capacity;
-  Value *values;
+typedef struct
+{
+    int count;
+    int capacity;
+    Value *values;
 } ValueArray;
 
-#define BOOL_VAL(value)                                                        \
-  (Value) {                                                                    \
-    VAL_BOOL, { .boolean = value }                                             \
-  }
-#define NIL_VAL                                                                \
-  (Value) { VAL_NUMBER, {.number = 0} }
-#define NUMBER_VAL(value)                                                      \
-  (Value) {                                                                    \
-    VAL_NUMBER, { .number = value }                                            \
-  }
+#define BOOL_VAL(value)                                                                                                \
+    (Value)                                                                                                            \
+    {                                                                                                                  \
+        VAL_BOOL,                                                                                                      \
+        {                                                                                                              \
+            .boolean = value                                                                                           \
+        }                                                                                                              \
+    }
+#define NIL_VAL                                                                                                        \
+    (Value)                                                                                                            \
+    {                                                                                                                  \
+        VAL_NUMBER, {.number = 0}                                                                                      \
+    }
+#define NUMBER_VAL(value)                                                                                              \
+    (Value)                                                                                                            \
+    {                                                                                                                  \
+        VAL_NUMBER,                                                                                                    \
+        {                                                                                                              \
+            .number = value                                                                                            \
+        }                                                                                                              \
+    }
 
 #define AS_BOOL(value) (value).as.boolean
 #define AS_NUMBER(value) (value).as.number
